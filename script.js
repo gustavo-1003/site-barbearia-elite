@@ -1,18 +1,24 @@
 'use strict';
 
 const SERVICES = [
-  { name: 'Low Fade', price: 55, image: 'photo-1621605815971-fbc98d665033' },
-  { name: 'Mid Fade', price: 55, image: 'photo-1503951914875-452162b0f3f1' },
-  { name: 'High Fade', price: 60, image: 'photo-1622286342621-4bd786c2447c' },
-  { name: 'Degradê', price: 50, image: 'photo-1599351431202-1e0f0137899a' },
-  { name: 'Corte Social', price: 50, image: 'photo-1504238591377-99ac6f9c9f4c' },
-  { name: 'Mullet', price: 60, image: 'photo-1620331311520-246422fd82f9' },
-  { name: 'Buzz Cut', price: 40, image: 'photo-1585747860715-2ba37e788b70' },
-  { name: 'Corte Americano', price: 60, image: 'photo-1593702288056-f3ec6b4e38e5' },
+  { name: 'Low Fade', price: 55, image: 'img/lowfade.jpeg' },
+  { name: 'Mid Fade', price: 55, image: 'img/midfade.jpeg' },
+  { name: 'High Fade', price: 55, image: 'img/highfade.jpeg' },
+  { name: 'Moicano', price: 55, image: 'img/moicano.jpeg' },
+  { name: 'Corte Social', price: 50, image: 'img/cortesocial.jpeg' },
+  { name: 'Mullet', price: 55, image: 'img/mullet.jpeg' },
+  { name: 'Buzz Cut', price: 55, image: 'img/buzzcut.jpeg' },
+  { name: 'Corte Americano', price: 55, image: 'img/corteamericano.jpeg' }
 ];
+
 const BARBERS = ['Rafael Mendes', 'Caio Oliveira', 'Lucas Ferreira'];
 const HOURS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
-const KEYS = { users: 'elite_users', bookings: 'elite_bookings', currentUser: 'elite_current_user', lastBooking: 'elite_last_booking' };
+const KEYS = {
+  users: 'elite_users',
+  bookings: 'elite_bookings',
+  currentUser: 'elite_current_user',
+  lastBooking: 'elite_last_booking',
+};
 
 function readList(key) {
   try {
@@ -24,21 +30,39 @@ function readList(key) {
 }
 
 function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+  return String(value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
 }
 
 function formatPrice(price) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(price);
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  }).format(price);
 }
 
 function getService(name) {
   return SERVICES.find(service => service.name === name);
 }
 
+function getServiceImageUrl(imagePath) {
+  if (imagePath.startsWith('photo-')) {
+    return `https://images.unsplash.com/${imagePath}?auto=format&fit=crop&w=750&q=80`;
+  }
+  return imagePath;
+}
+
 function initMenu() {
   const toggle = document.querySelector('.menu-toggle');
   const nav = document.querySelector('.nav-links');
   if (!toggle || !nav) return;
+
   toggle.addEventListener('click', () => {
     const open = toggle.getAttribute('aria-expanded') !== 'true';
     toggle.setAttribute('aria-expanded', String(open));
@@ -50,16 +74,25 @@ function initMenu() {
 function renderServices() {
   const grid = document.querySelector('#service-grid');
   if (!grid) return;
+
   grid.innerHTML = SERVICES.map(service => `
     <article class="service-card">
-      <img src="https://images.unsplash.com/${service.image}?auto=format&fit=crop&w=750&q=80" alt="Inspiração de corte ${escapeHTML(service.name)}" loading="lazy">
-      <div class="service-card-copy"><h3>${escapeHTML(service.name)}</h3><span class="price">${formatPrice(service.price)}</span></div>
+      <img 
+        src="${escapeHTML(getServiceImageUrl(service.image))}" 
+        alt="Inspiração de corte ${escapeHTML(service.name)}" 
+        loading="lazy"
+      >
+      <div class="service-card-copy">
+        <h3>${escapeHTML(service.name)}</h3>
+        <span class="price">${formatPrice(service.price)}</span>
+      </div>
     </article>`).join('');
 }
 
 function initRegister() {
   const form = document.querySelector('#register-form');
   if (!form) return;
+
   form.addEventListener('submit', event => {
     event.preventDefault();
     const data = new FormData(form);
@@ -70,6 +103,7 @@ function initRegister() {
     const confirm = String(data.get('confirm') || '');
     const error = document.querySelector('#register-error');
     const users = readList(KEYS.users);
+
     if (name.length < 3) error.textContent = 'Informe seu nome completo.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) error.textContent = 'Informe um e-mail válido.';
     else if (phone.replace(/\D/g, '').length < 10) error.textContent = 'Informe um telefone válido com DDD.';
@@ -77,7 +111,14 @@ function initRegister() {
     else if (password !== confirm) error.textContent = 'As senhas não coincidem.';
     else if (users.some(user => user.email === email)) error.textContent = 'Já existe uma conta com este e-mail. Entre na sua conta.';
     else {
-      users.push({ id: crypto.randomUUID(), name, email, phone, password, createdAt: new Date().toISOString() });
+      users.push({
+        id: crypto.randomUUID(),
+        name,
+        email,
+        phone,
+        password,
+        createdAt: new Date().toISOString(),
+      });
       localStorage.setItem(KEYS.users, JSON.stringify(users));
       localStorage.setItem(KEYS.currentUser, email);
       location.href = new URLSearchParams(location.search).get('next') === 'agendamento.html' ? 'agendamento.html' : 'index.html';
@@ -88,21 +129,25 @@ function initRegister() {
 function initLogin() {
   const form = document.querySelector('#login-form');
   if (!form) return;
+
   form.addEventListener('submit', event => {
     event.preventDefault();
     const data = new FormData(form);
     const email = String(data.get('email') || '').trim().toLowerCase();
     const password = String(data.get('password') || '');
     const error = document.querySelector('#login-error');
+
     if (!email || !password) {
       error.textContent = 'Preencha seu e-mail e sua senha.';
       return;
     }
+
     const user = readList(KEYS.users).find(item => item.email === email && item.password === password);
     if (!user) {
       error.textContent = 'E-mail ou senha incorretos. Confira os dados ou crie uma conta.';
       return;
     }
+
     localStorage.setItem(KEYS.currentUser, user.email);
     location.href = new URLSearchParams(location.search).get('next') === 'agendamento.html' ? 'agendamento.html' : 'index.html';
   });
@@ -111,6 +156,7 @@ function initLogin() {
 function initBooking() {
   const form = document.querySelector('#booking-form');
   if (!form) return;
+
   const currentEmail = localStorage.getItem(KEYS.currentUser);
   const user = readList(KEYS.users).find(item => item.email === currentEmail);
   if (!user) {
@@ -125,26 +171,32 @@ function initBooking() {
   const timeInput = document.querySelector('#time');
   const error = document.querySelector('#booking-error');
   const today = new Date();
+
   dateInput.min = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   SERVICES.forEach(service => serviceSelect.add(new Option(`${service.name} — ${formatPrice(service.price)}`, service.name)));
 
   const updatePrice = () => {
     const service = getService(serviceSelect.value);
-    document.querySelector('#booking-price').textContent = service ? `Valor do serviço: ${formatPrice(service.price)}` : 'Selecione um serviço para ver o valor';
+    document.querySelector('#booking-price').textContent = service
+      ? `Valor do serviço: ${formatPrice(service.price)}`
+      : 'Selecione um serviço para ver o valor';
   };
 
   const renderSlots = () => {
     timeInput.value = '';
     const date = dateInput.value;
     const barber = barberSelect.value;
+
     if (!date || !barber) {
       slots.innerHTML = '<p class="slot-hint">Selecione um barbeiro e uma data.</p>';
       return;
     }
+
     if (new Date(`${date}T12:00:00`).getDay() === 0) {
       slots.innerHTML = '<p class="slot-hint">Não abrimos aos domingos. Escolha outra data.</p>';
       return;
     }
+
     const bookings = readList(KEYS.bookings);
     slots.innerHTML = HOURS.map(hour => {
       const reserved = bookings.some(booking => booking.date === date && booking.barber === barber && booking.time === hour);
@@ -155,6 +207,7 @@ function initBooking() {
   serviceSelect.addEventListener('change', updatePrice);
   barberSelect.addEventListener('change', renderSlots);
   dateInput.addEventListener('change', renderSlots);
+
   slots.addEventListener('click', event => {
     const button = event.target.closest('.slot-button');
     if (!button || button.disabled) return;
@@ -163,27 +216,38 @@ function initBooking() {
     timeInput.value = button.dataset.time;
     error.textContent = '';
   });
+
   form.addEventListener('submit', event => {
     event.preventDefault();
     const service = getService(serviceSelect.value);
     const date = dateInput.value;
     const time = timeInput.value;
     const barber = barberSelect.value;
+
     if (!service || !date || !barber || !time) {
       error.textContent = 'Escolha o serviço, o barbeiro, a data e um horário disponível.';
       return;
     }
+
     const currentBookings = readList(KEYS.bookings);
     if (currentBookings.some(booking => booking.date === date && booking.barber === barber && booking.time === time)) {
       error.textContent = 'Este horário acabou de ser reservado. Escolha outro horário.';
       renderSlots();
       return;
     }
+
     const booking = {
-      id: crypto.randomUUID(), name: user.name, email: user.email,
-      service: service.name, price: service.price, barber, date, time,
+      id: crypto.randomUUID(),
+      name: user.name,
+      email: user.email,
+      service: service.name,
+      price: service.price,
+      barber,
+      date,
+      time,
       createdAt: new Date().toISOString(),
     };
+
     currentBookings.push(booking);
     localStorage.setItem(KEYS.bookings, JSON.stringify(currentBookings));
     localStorage.setItem(KEYS.lastBooking, booking.id);
@@ -194,18 +258,25 @@ function initBooking() {
 function initSuccess() {
   const container = document.querySelector('#confirmation-details');
   if (!container) return;
+
   const id = localStorage.getItem(KEYS.lastBooking);
   const booking = readList(KEYS.bookings).find(item => item.id === id);
+
   if (!booking) {
     container.innerHTML = '<p>Não encontramos um agendamento recente neste navegador. <a class="text-link" href="agendamento.html">Fazer agendamento ↗</a></p>';
     return;
   }
+
   const date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${booking.date}T12:00:00Z`));
   const details = [
-    ['CLIENTE', booking.name], ['SERVIÇO', booking.service],
-    ['BARBEIRO', booking.barber], ['DATA', date],
-    ['HORÁRIO', booking.time], ['VALOR', formatPrice(booking.price)],
+    ['CLIENTE', booking.name],
+    ['SERVIÇO', booking.service],
+    ['BARBEIRO', booking.barber],
+    ['DATA', date],
+    ['HORÁRIO', booking.time],
+    ['VALOR', formatPrice(booking.price)],
   ];
+
   container.innerHTML = details.map(([label, value]) => `<div><span>${label}</span>${escapeHTML(value)}</div>`).join('');
 }
 
